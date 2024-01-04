@@ -30,7 +30,10 @@ class Hittable(ABC):
 
 
 class HittableList(Hittable):
-    objects: List[Hittable] = []
+    objects: List[Hittable]
+
+    def __init__(self) -> None:
+        self.objects = []
 
     def hit(self, r: Ray, ray_tmin: float, ray_tmax: float, rec: HitRecord) -> bool:
         temp_rec = HitRecord()
@@ -38,7 +41,7 @@ class HittableList(Hittable):
         closest_so_far = ray_tmax
 
         for object in self.objects:
-            if object.hit(r, ray_tmin, closest_so_far, rec):
+            if object.hit(r, ray_tmin, closest_so_far, temp_rec):
                 hit_anything = True
                 closest_so_far = temp_rec.t
                 rec = temp_rec
