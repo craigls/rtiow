@@ -1,7 +1,7 @@
 from ray import Ray
 from hittable import Hittable, HitRecord
 from color import Color, get_color
-from vec3 import unit_vector, Vec3, Point3
+from vec3 import unit_vector, random_in_unit_sphere, Vec3, Point3
 from interval import Interval
 from typing import Generator, Tuple
 import random
@@ -22,6 +22,7 @@ class Camera:
     px_delta_v: Vec3
     view_upper_left: Vec3
     px00_loc: Vec3
+    max_depth: int = 10
 
     def setup(self) -> None:
         # Force image height to be at least 1
@@ -66,20 +67,28 @@ class Camera:
         self, world: Hittable
     ) -> Generator[Tuple[float, float, float], None, None]:
         for j in range(self.image_height):
-            print(f"Scanlines remaining: {(self.image_height - 1) - j}", end="\r")
+            print(f"Scanlines remaining: {(self.image_height - 1) - j} ", end="\r")
             for i in range(self.image_width):
                 px_color = Color(0, 0, 0)
                 # Apply anti-aliasing
                 for _ in range(self.samples_per_pixel):
                     r = self.get_ray(i, j)
-                    px_color += self.ray_color(r, world)
+                    px_color += self.ray_color(r, 0, world)
                 yield get_color(px_color, self.samples_per_pixel)
 
-    def ray_color(self, r: Ray, world: Hittable) -> Color:
+    def ray_color(self, r: Ray, depth: int, world: Hittable) -> Color:
+        if depth >= self.max_depth:
+            return Color(0, 0, 0)
         rec = HitRecord()
 
-        if world.hit(r, Interval(0, float("inf")), rec):
-            return 0.5 * (rec.normal + Color(1, 1, 1))
+        if world.hit(r, Interval(0.001, float("inf")), rec):
+            scattered = Ray()
+            attenuation = Color()
+            if rec.mat.scatter(r, rec, attenuation, scattered):
+                return attenuation * self.ray_color(scattered, depth + 1, world)
+            return Color(0, 0, 0)
+            direction = rec.normal + unit_vector(random_in_unit_sphere())
+            return 0.5 * self.ray_color(Ray(rec.p, direction), depth + 1, world)
 
         unit_direction = unit_vector(r.direction)
         a = 0.5 * unit_direction.y + 1.0

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Self, TypeAlias, Any
+import random
 import math
 
 
@@ -89,9 +90,39 @@ class Vec3:
     def length_squared(self) -> float:
         return self.x * self.x + self.y * self.y + self.z * self.z
 
+    def near_zero(self) -> bool:
+        s = 1e-8
+        return math.fabs(self.x) < s and math.fabs(self.y) < s and math.fabs(self.z) < s
+
 
 def unit_vector(v) -> Vec3:
     return v / v.length()
+
+
+def random_vector() -> Vec3:
+    return Vec3(random.random(), random.random(), random.random())
+
+
+def random_in_unit_sphere() -> Vec3:
+    while True:
+        p = random_vector()
+        if p.length_squared() < 1:
+            return p
+
+
+def random_unit_vector() -> Vec3:
+    return unit_vector(random_in_unit_sphere())
+
+
+def random_on_hemisphere(normal: Vec3) -> Vec3:
+    on_unit_sphere = unit_vector(random_in_unit_sphere())
+    if dot(on_unit_sphere, normal) > 0:
+        return on_unit_sphere
+    return -on_unit_sphere
+
+
+def reflect(v: Vec3, n: Vec3) -> Vec3:
+    return v - 2 * dot(v, n) * n
 
 
 def dot(a: Vec3, b: Vec3) -> float:

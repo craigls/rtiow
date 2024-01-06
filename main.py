@@ -9,6 +9,7 @@ from vec3 import Vec3, Point3, dot, cross, unit_vector
 from color import Color, get_color
 from hittable import HittableList, Hittable, HitRecord
 from interval import Interval
+from material import Lambertian, Metal
 from camera import Camera
 import utils
 import sys
@@ -27,13 +28,25 @@ def ray_color(r: Ray, world: HittableList) -> Color:
 
 def main() -> None:
     world: HittableList = HittableList()
-    world.add(Sphere(Point3(0, 0, -1), 0.5))
-    world.add(Sphere(Point3(0, -100.5, -1), 100))
+    material_ground = Lambertian(Color(0.8, 0.8, 0.0))
+    material_center = Lambertian(Color(0.7, 0.3, 0.3))
+    material_left = Metal(Color(0.8, 0.8, 0.8))
+    material_right = Metal(Color(0.8, 0.6, 0.2))
+
+    world.add(Sphere(Point3(0.0, -100.5, -1.0), 100.0, material_ground))
+    world.add(Sphere(Point3(0.0, 0.0, -1.0), 0.5, material_center))
+    world.add(Sphere(Point3(-1.0, 0.0, -1.0), 0.5, material_left))
+    world.add(Sphere(Point3(1.0, 0.0, -1.0), 0.5, material_right))
 
     cam: Camera = Camera()
     cam.aspect_ratio = 16.0 / 9.0
     cam.image_width = 400
+    cam.max_depth = 50
     cam.setup()
+
+    if len(sys.argv) < 2:
+        print("Error: Pass output .ppm file as argument")
+        raise SystemExit(1)
 
     with open(sys.argv[1], "w") as f:
         # ppm header

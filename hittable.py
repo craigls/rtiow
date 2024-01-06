@@ -2,7 +2,13 @@ from vec3 import Vec3, Point3, dot
 from abc import ABC, abstractmethod
 from ray import Ray
 from interval import Interval
-from typing import List, Any
+from typing import List, Any, TYPE_CHECKING
+
+from typing import TYPE_CHECKING
+
+# Hack to avoid circular import
+if TYPE_CHECKING:
+    from material import Material
 
 
 class HitRecord:
@@ -10,6 +16,7 @@ class HitRecord:
     normal: Vec3
     t: float
     front_face: bool
+    mat: "Material"
 
     def __init__(self) -> None:
         self.normal = Vec3()
@@ -51,6 +58,7 @@ class HittableList(Hittable):
                 rec.p = temp_rec.p
                 rec.normal = temp_rec.normal
                 rec.front_face = temp_rec.front_face
+                rec.mat = temp_rec.mat
 
         return hit_anything
 
