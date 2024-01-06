@@ -27,10 +27,6 @@ def ray_color(r: Ray, world: HittableList) -> Color:
 
 def main() -> None:
     world: HittableList = HittableList()
-    aspect_ratio = 16 / 9.0
-    image_width = 400
-
-    world = HittableList()
     world.add(Sphere(Point3(0, 0, -1), 0.5))
     world.add(Sphere(Point3(0, -100.5, -1), 100))
 
@@ -42,8 +38,8 @@ def main() -> None:
     with open(sys.argv[1], "w") as f:
         # ppm header
         f.write(f"P3\n{cam.image_width} {cam.image_height}\n255\n")
-        for data in cam.render(world):
-            f.write(get_color(data))
+        for px in cam.render(world):
+            f.write(f"{px[0]} {px[1]} {px[2]}\n")
 
 
 if __name__ == "__main__":
