@@ -1,6 +1,7 @@
 from vec3 import Vec3, Point3, dot
 from abc import ABC, abstractmethod
 from ray import Ray
+from interval import Interval
 from typing import List, Any
 
 
@@ -25,26 +26,31 @@ class HitRecord:
 
 class Hittable(ABC):
     @abstractmethod
-    def hit(self, r: Ray, ray_tmin: float, ray_tmax: float, rec: HitRecord) -> bool:
+    def hit(self, r: Ray, ray_t: Interval, rec: HitRecord) -> bool:
         pass
 
 
 class HittableList(Hittable):
     objects: List[Hittable]
+    temp_rec: HitRecord
 
     def __init__(self) -> None:
         self.objects = []
+        self.temp_rec = HitRecord()
 
-    def hit(self, r: Ray, ray_tmin: float, ray_tmax: float, rec: HitRecord) -> bool:
+    def hit(self, r: Ray, ray_t: Interval, rec: HitRecord) -> bool:
         temp_rec = HitRecord()
         hit_anything = False
-        closest_so_far = ray_tmax
+        closest_so_far = ray_t.max_value
 
         for object in self.objects:
-            if object.hit(r, ray_tmin, closest_so_far, temp_rec):
+            if object.hit(r, Interval(ray_t.min_value, closest_so_far), temp_rec):
                 hit_anything = True
                 closest_so_far = temp_rec.t
-                rec = temp_rec
+                rec.t = temp_rec.t
+                rec.p = temp_rec.p
+                rec.normal = temp_rec.normal
+                rec.front_face = temp_rec.front_face
 
         return hit_anything
 

@@ -8,12 +8,16 @@ from sphere import Sphere
 from vec3 import Vec3, Point3, dot, cross, unit_vector
 from color import Color, get_color
 from hittable import HittableList, Hittable, HitRecord
+from interval import Interval
+from camera import Camera
 import utils
+import sys
 
 
-def ray_color(r: Ray, world: Hittable) -> Color:
+def ray_color(r: Ray, world: HittableList) -> Color:
     rec = HitRecord()
-    if world.hit(r, 0, math.inf, rec):
+
+    if world.hit(r, Interval(0, float("inf")), rec):
         return 0.5 * (rec.normal + Color(1, 1, 1))
 
     unit_direction = unit_vector(r.direction)
@@ -22,45 +26,24 @@ def ray_color(r: Ray, world: Hittable) -> Color:
 
 
 def main() -> None:
+    world: HittableList = HittableList()
     aspect_ratio = 16 / 9.0
     image_width = 400
 
-    # Force image height to be at least 1
-    image_height = int(400 / aspect_ratio) or 1
-
-    # World
     world = HittableList()
     world.add(Sphere(Point3(0, 0, -1), 0.5))
     world.add(Sphere(Point3(0, -100.5, -1), 100))
 
-    # Camera
-    focal_length = 1.0
-    view_height = 2.0
-    view_width = view_height * (image_width / image_height)
-    camera_center = Point3(0, 0, 0)
-
-    view_u = Vec3(view_width, 0, 0)
-    view_v = Vec3(0, -view_height, 0)
-
-    px_delta_u = view_u / image_width
-    px_delta_v = view_v / image_height
-
-    view_upper_left = camera_center - Vec3(0, 0, focal_length) - view_u / 2 - view_v / 2
-    px00_loc = view_upper_left + 0.5 * (px_delta_u + px_delta_v)
+    cam: Camera = Camera()
+    cam.aspect_ratio = 16.0 / 9.0
+    cam.image_width = 400
+    cam.setup()
 
     with open(sys.argv[1], "w") as f:
         # ppm header
-        f.write(f"P3\n{image_width} {image_height}\n255\n")
-
-        for j in range(image_height):
-            print(f"Scanlines remaining: {(image_height - 1) - j}", end="\r")
-            for i in range(image_width):
-                px_center = px00_loc + (i * px_delta_u) + (j * px_delta_v)
-                ray_direction = px_center - camera_center
-                r = Ray(camera_center, ray_direction)
-                px_color = ray_color(r, world)
-
-                f.write(get_color(px_color))
+        f.write(f"P3\n{cam.image_width} {cam.image_height}\n255\n")
+        for data in cam.render(world):
+            f.write(get_color(data))
 
 
 if __name__ == "__main__":

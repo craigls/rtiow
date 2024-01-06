@@ -2,6 +2,7 @@ import math
 from hittable import Hittable, HitRecord
 from vec3 import Vec3, Point3, dot
 from ray import Ray
+from interval import Interval
 
 
 class Sphere(Hittable):
@@ -12,7 +13,7 @@ class Sphere(Hittable):
         self.center = center
         self.radius = radius
 
-    def hit(self, r: Ray, ray_tmin: float, ray_tmax: float, rec: HitRecord) -> bool:
+    def hit(self, r: Ray, ray_t: Interval, rec: HitRecord) -> bool:
         oc = r.origin - self.center
         a = r.direction.length_squared()
         half_b = dot(oc, r.direction)
@@ -24,9 +25,9 @@ class Sphere(Hittable):
         sqrtd = math.sqrt(discriminant)
 
         root = (-half_b - sqrtd) / a
-        if root <= ray_tmin or ray_tmin <= root:
+        if not ray_t.surrounds(root):
             root = (-half_b + sqrtd) / a
-            if root <= ray_tmin or ray_tmax <= root:
+            if not ray_t.surrounds(root):
                 return False
 
         rec.t = root
