@@ -99,13 +99,17 @@ def unit_vector(v) -> Vec3:
     return v / v.length()
 
 
-def random_vector() -> Vec3:
-    return Vec3(random.random(), random.random(), random.random())
+def random_vector(min_value: float = 0, max_value: float = 1) -> Vec3:
+    return Vec3(
+        random.uniform(min_value, max_value),
+        random.uniform(min_value, max_value),
+        random.uniform(min_value, max_value),
+    )
 
 
 def random_in_unit_sphere() -> Vec3:
     while True:
-        p = random_vector()
+        p = random_vector(-1, 1)
         if p.length_squared() < 1:
             return p
 
@@ -115,14 +119,21 @@ def random_unit_vector() -> Vec3:
 
 
 def random_on_hemisphere(normal: Vec3) -> Vec3:
-    on_unit_sphere = unit_vector(random_in_unit_sphere())
-    if dot(on_unit_sphere, normal) > 0:
+    on_unit_sphere = random_unit_vector()
+    if dot(on_unit_sphere, normal) > 0.0:
         return on_unit_sphere
     return -on_unit_sphere
 
 
 def reflect(v: Vec3, n: Vec3) -> Vec3:
     return v - 2 * dot(v, n) * n
+
+
+def refract(uv: Vec3, n: Vec3, etai_over_etat: float) -> Vec3:
+    cos_theta = min(dot(-uv, n), 1.0)
+    r_out_perp = etai_over_etat * (uv + cos_theta * n)
+    r_out_parallel = -math.sqrt(math.fabs(1.0 - r_out_perp.length_squared())) * n
+    return r_out_perp + r_out_parallel
 
 
 def dot(a: Vec3, b: Vec3) -> float:

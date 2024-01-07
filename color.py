@@ -19,7 +19,7 @@ def get_color(color: Color, samples_per_pixel) -> Tuple[float, float, float]:
     b = linear_to_gamma(color.z * scale)
 
     return (
-        int(255 * intensity.clamp(r)),
-        int(255 * intensity.clamp(g)),
-        int(255 * intensity.clamp(b)),
+        int(256 * intensity.clamp(r)),
+        int(256 * intensity.clamp(g)),
+        int(256 * intensity.clamp(b)),
     )

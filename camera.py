@@ -73,11 +73,11 @@ class Camera:
                 # Apply anti-aliasing
                 for _ in range(self.samples_per_pixel):
                     r = self.get_ray(i, j)
-                    px_color += self.ray_color(r, 0, world)
+                    px_color += self.ray_color(r, self.max_depth, world)
                 yield get_color(px_color, self.samples_per_pixel)
 
     def ray_color(self, r: Ray, depth: int, world: Hittable) -> Color:
-        if depth >= self.max_depth:
+        if depth <= 0:
             return Color(0, 0, 0)
         rec = HitRecord()
 
@@ -85,11 +85,9 @@ class Camera:
             scattered = Ray()
             attenuation = Color()
             if rec.mat.scatter(r, rec, attenuation, scattered):
-                return attenuation * self.ray_color(scattered, depth + 1, world)
+                return attenuation * self.ray_color(scattered, depth - 1, world)
             return Color(0, 0, 0)
-            direction = rec.normal + unit_vector(random_in_unit_sphere())
-            return 0.5 * self.ray_color(Ray(rec.p, direction), depth + 1, world)
 
         unit_direction = unit_vector(r.direction)
-        a = 0.5 * unit_direction.y + 1.0
+        a = 0.5 * (unit_direction.y + 1.0)
         return (1.0 - a) * Color(1.0, 1.0, 1.0) + a * Color(0.5, 0.7, 1.0)
