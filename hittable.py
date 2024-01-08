@@ -27,8 +27,8 @@ class HitRecord:
     def set_face_normal(self, r: Ray, outward_normal: Vec3) -> None:
         # Sets the hit record normal vector.
         # NOTE: the parameter `outward_normal` is assumed to have unit length.
-        front_face = dot(r.direction, outward_normal) < 0
-        self.normal = outward_normal if front_face else -outward_normal
+        self.front_face = dot(r.direction, outward_normal) < 0
+        self.normal = outward_normal if self.front_face else -outward_normal
 
 
 class Hittable(ABC):

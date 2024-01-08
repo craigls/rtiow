@@ -11,7 +11,6 @@ class Camera:
     image_width: int = 100
     image_height: int
     aspect_ratio: float = 1.0
-    samples_per_pixel: int = 10
     focal_length: float
     view_height: float
     view_width: float
@@ -22,7 +21,8 @@ class Camera:
     px_delta_v: Vec3
     view_upper_left: Vec3
     px00_loc: Vec3
-    max_depth: int = 10
+    max_depth: int = 50
+    samples_per_pixel: int = 100
 
     def setup(self) -> None:
         # Force image height to be at least 1

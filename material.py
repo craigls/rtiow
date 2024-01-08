@@ -56,7 +56,7 @@ class Metal(Material):
         return dot(scattered.direction, rec.normal) > 0
 
 
-class Dialectric(Material):
+class Dielectric(Material):
     index_of_refraction: float
 
     def __init__(self, index_of_refraction: float) -> None:

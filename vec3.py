@@ -91,7 +91,8 @@ class Vec3:
         return self.x * self.x + self.y * self.y + self.z * self.z
 
     def near_zero(self) -> bool:
-        s = 1e-8
+        # s = 1e-8
+        s = 0.0001
         return math.fabs(self.x) < s and math.fabs(self.y) < s and math.fabs(self.z) < s
 
 

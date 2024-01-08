@@ -9,7 +9,7 @@ from vec3 import Vec3, Point3, dot, cross, unit_vector
 from color import Color, get_color
 from hittable import HittableList, Hittable, HitRecord
 from interval import Interval
-from material import Lambertian, Metal, Dialectric
+from material import Lambertian, Metal, Dielectric
 from camera import Camera
 import utils
 import sys
@@ -30,20 +30,19 @@ def main() -> None:
     world: HittableList = HittableList()
     material_ground = Lambertian(Color(0.8, 0.8, 0.0))
     material_center = Lambertian(Color(0.1, 0.2, 0.5))
-    material_left = Dialectric(1.5)
+    material_left = Dielectric(1.5)
     material_right = Metal(Color(0.8, 0.6, 0.2), 0.0)
 
     world.add(Sphere(Point3(0.0, -100.5, -1.0), 100.0, material_ground))
     world.add(Sphere(Point3(0.0, 0.0, -1.0), 0.5, material_center))
-    world.add(Sphere(Point3(-1.0, 0.0, -1.0), 0.5, material_left))
     world.add(Sphere(Point3(-1.0, 0.0, -1.0), 0.4, material_left))
     world.add(Sphere(Point3(1.0, 0.0, -1.0), 0.5, material_right))
 
     cam: Camera = Camera()
     cam.aspect_ratio = 16.0 / 9.0
     cam.image_width = 400
-    cam.samples_per_pixel = 100
-    cam.max_depth = 50
+    cam.samples_per_pixel = 10
+    cam.max_depth = 10
     cam.setup()
 
     if len(sys.argv) < 2:
