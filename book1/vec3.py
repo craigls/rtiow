@@ -94,9 +94,24 @@ class Vec3:
         s = 1e-8
         return math.fabs(self.x) < s and math.fabs(self.y) < s and math.fabs(self.z) < s
 
+    @classmethod
+    def random(cls, min_value: float = 0, max_value: float = 1) -> Vec3:
+        return cls(
+            random.uniform(min_value, max_value),
+            random.uniform(min_value, max_value),
+            random.uniform(min_value, max_value),
+        )
+
 
 def unit_vector(v) -> Vec3:
     return v / v.length()
+
+
+def random_in_unit_disk() -> Vec3:
+    while True:
+        p = Vec3(random.uniform(-1, 1), random.uniform(-1, 1), 0)
+        if p.length_squared() < 1:
+            return p
 
 
 def random_vector(min_value: float = 0, max_value: float = 1) -> Vec3:

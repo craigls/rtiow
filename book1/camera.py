@@ -1,17 +1,18 @@
 from ray import Ray
 from hittable import Hittable, HitRecord
 from color import Color, get_color
-from vec3 import unit_vector, random_in_unit_sphere, Vec3, Point3
+from vec3 import unit_vector, random_in_unit_disk, cross, Vec3, Point3
 from interval import Interval
 from typing import Generator, Tuple
+import math
 import random
+from utils import degrees_to_radians
 
 
 class Camera:
     image_width: int = 100
     image_height: int
     aspect_ratio: float = 1.0
-    focal_length: float
     view_height: float
     view_width: float
     center: Point3
@@ -23,20 +24,38 @@ class Camera:
     px00_loc: Vec3
     max_depth: int = 50
     samples_per_pixel: int = 100
+    vfov: float = 90
+    lookfrom: Point3 = Point3(0, 0, -1)
+    lookat: Point3 = Point3(0, 0, 0)
+    vup: Vec3 = Vec3(0, 1, 0)
+    u: Vec3
+    v: Vec3
+    w: Vec3
+    defocus_angle: float = 0
+    focus_dist: float = 10
+    defocus_disk_v: Vec3
+    defocus_disk_u: Vec3
 
     def setup(self) -> None:
         # Force image height to be at least 1
-        self.image_height = int(400 / self.aspect_ratio) or 1
+        self.image_height = int(self.image_width / self.aspect_ratio) or 1
 
-        # Camera
-        self.focal_length = 1.0
-        self.view_height = 2.0
+        # Determine viewport dimensions
+        theta = degrees_to_radians(self.vfov)
+        h = math.tan(theta / 2)
+
+        self.view_height = 2 * h * self.focus_dist
         self.view_width = self.view_height * (self.image_width / self.image_height)
-        self.center = Point3(0, 0, 0)
+        self.center = self.lookfrom
 
-        # Viewport
-        self.view_u = Vec3(self.view_width, 0, 0)
-        self.view_v = Vec3(0, -self.view_height, 0)
+        # Calculate u, v, w unit basis vectors for the camera coordinate frame
+        self.w = unit_vector(self.lookfrom - self.lookat)
+        self.u = unit_vector(cross(self.vup, self.w))
+        self.v = cross(self.w, self.u)
+
+        # Calculate vectors accross horizontal and down the vertical edges
+        self.view_u = self.view_width * self.u
+        self.view_v = self.view_height * -self.v
 
         # Horizontal and vertical delta vectors between pixels
         self.px_delta_u = self.view_u / self.image_width
@@ -44,12 +63,17 @@ class Camera:
 
         # Upper left pixel
         self.view_upper_left = (
-            self.center
-            - Vec3(0, 0, self.focal_length)
-            - self.view_u / 2
-            - self.view_v / 2
+            self.center - (self.focus_dist * self.w) - self.view_u / 2 - self.view_v / 2
         )
+
         self.px00_loc = self.view_upper_left + 0.5 * (self.px_delta_u + self.px_delta_v)
+
+        # Camera defocus disk basis vectors
+        defocus_radius = self.focus_dist * math.tan(
+            degrees_to_radians(self.defocus_angle / 2)
+        )
+        self.defocus_disk_u = self.u * defocus_radius
+        self.defocus_disk_v = self.v * defocus_radius
 
     def pixel_sample_square(self) -> Vec3:
         px = -0.5 + random.random()
@@ -59,7 +83,9 @@ class Camera:
     def get_ray(self, i: int, j: int) -> Ray:
         px_center = self.px00_loc + (i * self.px_delta_u) + (j * self.px_delta_v)
         px_sample = px_center + self.pixel_sample_square()
-        ray_origin = self.center
+        ray_origin = (
+            self.defocus_disk_sample() if self.defocus_angle > 0 else self.center
+        )
         ray_direction = px_sample - ray_origin
         return Ray(ray_origin, ray_direction)
 
@@ -91,3 +117,7 @@ class Camera:
         unit_direction = unit_vector(r.direction)
         a = 0.5 * (unit_direction.y + 1.0)
         return (1.0 - a) * Color(1.0, 1.0, 1.0) + a * Color(0.5, 0.7, 1.0)
+
+    def defocus_disk_sample(self) -> Point3:
+        p = random_in_unit_disk()
+        return self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
